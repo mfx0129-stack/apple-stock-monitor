@@ -2,6 +2,15 @@ name: Apple Store iPhone Stock Monitor
 
 on:
   workflow_dispatch:
+    inputs:
+      test_discord:
+        description: "Discordテスト通知を送信する"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
 
   schedule:
     - cron: "*/5 * * * *"
@@ -11,59 +20,46 @@ permissions:
 
 jobs:
   monitor:
-
     runs-on: ubuntu-latest
 
     steps:
 
-      # GitHubリポジトリを取得
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 1
 
-      # Python
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
-      # 必要ライブラリ
       - name: Install dependencies
         run: |
           pip install requests curl_cffi
 
-      # Apple在庫チェック
       - name: Run Apple Stock Monitor
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-
+          TEST_DISCORD: ${{ github.event_name == 'workflow_dispatch' && inputs.test_discord || '0' }}
         run: |
           python monitor.py
 
-      # 在庫状態をGitHubへ保存
       - name: Save stock state
+        if: ${{ github.event_name == 'schedule' }}
         run: |
-
           if [ -f stock_state.json ]; then
 
             git config user.name "github-actions[bot]"
-
-            git config user.email \
-              "41898282+github-actions[bot]@users.noreply.github.com"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
             git add stock_state.json
 
             if git diff --cached --quiet; then
-
               echo "No stock state changes."
-
             else
-
               git commit -m "Update stock state"
-
               git push
-
             fi
 
           fi
