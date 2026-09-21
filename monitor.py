@@ -1,141 +1,203 @@
+import json
 import os
-import requests
-from datetime import datetime, timezone, timedelta
+from pathlib import Path
 
-DISCORD_WEBHOOK = os.environ.get("DISCORD_WEBHOOK")
+from curl_cffi import requests
+
+DISCORD_WEBHOOK = os.environ.get("DISCORD_WEBHOOK", "").strip()
 
 APPLE_URL = "https://www.apple.com/jp/shop/retail/pickup-message"
 
-# Apple 川崎
-STORE = "R004"
+STORE_NUMBER = "R710"
+STORE_NAME = "Apple 川崎"
 
-# iPhone 18 Pro Max
-# 256GB / 512GB
-# ブラック / シルバー / グレイシャー / バーガンディ
-#
-# Appleの実際の販売SKUは変更される可能性があるため、
-# 下記SKUをAppleの商品ページから取得して確認する方式にしています。
+PRODUCTS = {
+    "MJX54J/A": "iPhone 18 Pro Max 256GB ブラック",
+    "MJX64J/A": "iPhone 18 Pro Max 256GB シルバー",
+    "MJX74J/A": "iPhone 18 Pro Max 256GB バーガンディ",
+    "MJX84J/A": "iPhone 18 Pro Max 256GB グレイシャー",
+    "MJX94J/A": "iPhone 18 Pro Max 512GB ブラック",
+    "MJXA4J/A": "iPhone 18 Pro Max 512GB シルバー",
+    "MJXC4J/A": "iPhone 18 Pro Max 512GB バーガンディ",
+    "MJXD4J/A": "iPhone 18 Pro Max 512GB グレイシャー",
+}
 
-PRODUCT_NAMES = [
-    "iPhone 18 Pro Max 256GB ブラック",
-    "iPhone 18 Pro Max 256GB シルバー",
-    "iPhone 18 Pro Max 256GB グレイシャー",
-    "iPhone 18 Pro Max 256GB バーガンディ",
-    "iPhone 18 Pro Max 512GB ブラック",
-    "iPhone 18 Pro Max 512GB シルバー",
-    "iPhone 18 Pro Max 512GB グレイシャー",
-    "iPhone 18 Pro Max 512GB バーガンディ",
-]
-
-# Appleの日本向けiPhone 18 Pro Max SKU
-# ここはAppleの販売ページで確認できたSKUに差し替えて使用します。
-PART_NUMBERS = []
+STATE_FILE = Path("stock_state.json")
 
 
 def send_discord(message):
     if not DISCORD_WEBHOOK:
-        print("DISCORD_WEBHOOKが設定されていません。")
+        print("DISCORD_WEBHOOK が設定されていません。")
         return
 
     response = requests.post(
         DISCORD_WEBHOOK,
         json={"content": message},
-        timeout=20
+        timeout=20,
+        impersonate="chrome",
     )
-
     response.raise_for_status()
 
 
-def check_stock(part_numbers):
-    if not part_numbers:
-        raise RuntimeError(
-            "AppleのiPhone 18 Pro Maxの販売SKUが設定されていません。"
-        )
+def load_state():
+    if not STATE_FILE.exists():
+        return {}
 
+    try:
+        return json.loads(STATE_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def save_state(state):
+    STATE_FILE.write_text(
+        json.dumps(state, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
+def check_stock():
     params = {
         "pl": "true",
         "mts.0": "regular",
-        "store": STORE,
+        "store": STORE_NUMBER,
     }
 
-    for i, part_number in enumerate(part_numbers):
-        params[f"parts.{i}"] = part_number
+    for index, part_number in enumerate(PRODUCTS):
+        params[f"parts.{index}"] = part_number
 
     headers = {
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/140.0.0.0 Safari/537.36"
-        ),
         "Accept": "application/json, text/plain, */*",
         "Accept-Language": "ja-JP,ja;q=0.9,en-US;q=0.8,en;q=0.7",
-        "Referer": "https://www.apple.com/jp/",
+        "Referer": "https://www.apple.com/jp/shop/buy-iphone/iphone-18-pro",
     }
 
-    response = requests.get(
+    session = requests.Session(impersonate="chrome")
+
+    response = session.get(
         APPLE_URL,
         params=params,
         headers=headers,
-        timeout=30
+        timeout=30,
     )
 
     print("Apple API HTTP:", response.status_code)
+    print("Apple API URL:", response.url)
+
+    if response.status_code == 541:
+        raise RuntimeError(
+            "AppleからHTTP 541でブロックされました。在庫なしとは判定していません。"
+        )
 
     response.raise_for_status()
 
     data = response.json()
+    stores = data.get("body", {}).get("stores", [])
 
-    body = data.get("body", {})
-    stores = body.get("stores", [])
-    availability = body.get("partsAvailability", {})
+    if not isinstance(stores, list):
+        raise RuntimeError("Apple APIのstores形式が想定と異なります。")
 
-    found = []
+    target_store = next(
+        (store for store in stores if store.get("storeNumber") == STORE_NUMBER),
+        None,
+    )
 
-    for store in stores:
-        store_number = store.get("storeNumber")
+    if target_store is None:
+        raise RuntimeError(
+            f"{STORE_NAME} ({STORE_NUMBER}) がApple APIの応答にありません。"
+        )
 
-        if store_number != STORE:
-            continue
+    parts_availability = target_store.get("partsAvailability", {})
+    results = {}
 
-        for part_number in part_numbers:
-            part_data = availability.get(part_number, {})
-            pickup = part_data.get("pickupDisplay")
+    for part_number, product_name in PRODUCTS.items():
+        part_data = parts_availability.get(part_number, {})
+        pickup_display = part_data.get("pickupDisplay")
 
-            if pickup == "available":
-                found.append(part_number)
+        if pickup_display == "available":
+            status = "available"
+        elif pickup_display in ("unavailable", "ineligible", "ships-to-store"):
+            status = "unavailable"
+        else:
+            status = "unknown"
 
-    return found
+        results[part_number] = {
+            "name": product_name,
+            "status": status,
+            "pickup_display": pickup_display,
+        }
+
+        print(f"{product_name}: {pickup_display or 'unknown'}")
+
+    return results
+
+
+def make_stock_message(items):
+    lines = [
+        "🚨 **Apple Store 在庫あり！**",
+        "",
+        f"🏬 {STORE_NAME}",
+        "📱 iPhone 18 Pro Max",
+        "",
+    ]
+
+    for item in items:
+        lines.append(f"✅ {item['name']}")
+
+    lines.extend(
+        [
+            "",
+            "🛒 Apple公式",
+            "https://www.apple.com/jp/shop/buy-iphone/iphone-18-pro",
+        ]
+    )
+
+    return "\n".join(lines)
 
 
 def main():
     print("==========================================")
-    print("Apple Store iPhone在庫監視")
+    print("Apple Store iPhone 在庫監視")
     print("==========================================")
-    print("店舗：Apple 川崎")
+    print(f"店舗：{STORE_NAME} ({STORE_NUMBER})")
     print("機種：iPhone 18 Pro Max")
     print("容量：256GB / 512GB")
     print("カラー：ブラック / シルバー / グレイシャー / バーガンディ")
     print("==========================================")
 
-    try:
-        stock = check_stock(PART_NUMBERS)
+    old_state = load_state()
 
-        if stock:
-            message = (
-                "🚨 **Apple Store 在庫あり！**\n\n"
-                "📱 iPhone 18 Pro Max\n"
-                "🏬 Apple 川崎\n\n"
-                "在庫ありSKU:\n"
-                + "\n".join(f"・{x}" for x in stock)
-                + "\n\n"
-                "🔗 https://www.apple.com/jp/shop/buy-iphone/iphone-18-pro"
+    try:
+        results = check_stock()
+
+        newly_available_items = []
+
+        for part_number, item in results.items():
+            old_status = old_state.get(part_number, {}).get(
+                "status", "unavailable"
             )
 
+            if item["status"] == "available" and old_status != "available":
+                newly_available_items.append(item)
+
+        new_state = {
+            part_number: {
+                "name": item["name"],
+                "status": item["status"],
+            }
+            for part_number, item in results.items()
+        }
+
+        save_state(new_state)
+
+        if newly_available_items:
+            message = make_stock_message(newly_available_items)
             print(message)
             send_discord(message)
-
+        elif any(item["status"] == "available" for item in results.values()):
+            print("在庫あり（前回から変化なし）。Discord通知は送りません。")
         else:
-            print("現在、在庫はありません。")
+            print("現在、Apple 川崎に対象商品の在庫はありません。")
 
     except Exception as e:
         print("==========================================")
@@ -145,8 +207,11 @@ def main():
 
         send_discord(
             "⚠️ **Apple在庫監視エラー**\n\n"
-            f"```{e}```"
+            f"~~~{e}~~~\n\n"
+            "※このエラー発生時は在庫状態を変更していません。"
         )
+
+        raise
 
 
 if __name__ == "__main__":
