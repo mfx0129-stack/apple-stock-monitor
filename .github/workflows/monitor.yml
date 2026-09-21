@@ -1,10 +1,9 @@
 name: Apple Store iPhone Stock Monitor
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: "*/5 * * * *"
-
-  workflow_dispatch:
 
 jobs:
   monitor:
@@ -20,11 +19,9 @@ jobs:
           python-version: "3.12"
 
       - name: Install requests
-        run: |
-          pip install requests
+        run: pip install requests
 
-      - name: Check Apple Store Stock
+      - name: Run Apple Stock Monitor
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        run: |
-          python monitor.py
+        run: python monitor.py
