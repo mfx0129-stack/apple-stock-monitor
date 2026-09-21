@@ -232,7 +232,7 @@ def main():
     # Discordテストモード
     # ------------------------------------------
 
-    if TEST_DISCORD == "1":
+    if TEST_DISCORD.lower() in ("1", "true"):
         test_discord()
         return
 
