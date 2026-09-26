@@ -9,8 +9,10 @@ TEST_DISCORD = os.environ.get("TEST_DISCORD", "0").strip()
 
 APPLE_URL = "https://www.apple.com/jp/shop/retail/pickup-message"
 
-STORE_NUMBER = "R710"
-STORE_NAME = "Apple 川崎"
+STORES = {
+    "R710": "Apple 川崎",
+    "R119": "Apple 渋谷",
+}
 
 PRODUCTS = {
     "MJX54J/A": "iPhone 18 Pro Max 256GB ブラック",
@@ -49,7 +51,7 @@ def test_discord():
         "🔔 **Apple在庫監視 テスト通知**\n\n"
         "Discord Webhookの接続テストに成功しました。\n"
         "この通知はテスト用です。\n\n"
-        "🏬 Apple 川崎\n"
+        "🏬 Apple 川崎 / Apple 渋谷\n"
         "📱 iPhone 18 Pro Max\n"
         "💾 256GB / 512GB\n"
     )
@@ -64,9 +66,26 @@ def load_state():
         return {}
 
     try:
-        return json.loads(
+        state = json.loads(
             STATE_FILE.read_text(encoding="utf-8")
         )
+
+        # 旧形式
+        # {
+        #   "MJX54J/A": {"name": "...", "status": "..."}
+        # }
+        #
+        # を新形式に移行する。
+        if any(
+            part_number in state
+            for part_number in PRODUCTS
+        ):
+            return {
+                "R710": state
+            }
+
+        return state
+
     except Exception:
         return {}
 
@@ -82,11 +101,11 @@ def save_state(state):
     )
 
 
-def check_stock():
+def check_stock(store_number, store_name):
     params = {
         "pl": "true",
         "mts.0": "regular",
-        "store": STORE_NUMBER,
+        "store": store_number,
     }
 
     for index, part_number in enumerate(PRODUCTS):
@@ -114,12 +133,12 @@ def check_stock():
         timeout=30,
     )
 
-    print("Apple API HTTP:", response.status_code)
+    print(f"Apple API HTTP ({store_name}):", response.status_code)
     print("Apple API URL:", response.url)
 
     if response.status_code == 541:
         raise RuntimeError(
-            "AppleからHTTP 541でブロックされました。"
+            f"{store_name}：AppleからHTTP 541でブロックされました。"
             "在庫なしとは判定していません。"
         )
 
@@ -137,21 +156,21 @@ def check_stock():
 
     if not isinstance(stores, list):
         raise RuntimeError(
-            "Apple APIのstores形式が想定と異なります。"
+            f"{store_name}：Apple APIのstores形式が想定と異なります。"
         )
 
     target_store = next(
         (
             store
             for store in stores
-            if store.get("storeNumber") == STORE_NUMBER
+            if store.get("storeNumber") == store_number
         ),
         None,
     )
 
     if target_store is None:
         raise RuntimeError(
-            f"{STORE_NAME} ({STORE_NUMBER}) が"
+            f"{store_name} ({store_number}) が"
             "Apple APIの応答にありません。"
         )
 
@@ -193,19 +212,18 @@ def check_stock():
         }
 
         print(
-            f"{product_name}: "
+            f"{store_name} / {product_name}: "
             f"{pickup_display or 'unknown'}"
         )
 
     return results
 
 
-def make_stock_message(items):
-
+def make_stock_message(store_name, items):
     lines = [
         "🚨 **Apple Store 在庫あり！**",
         "",
-        f"🏬 {STORE_NAME}",
+        f"🏬 {store_name}",
         "📱 iPhone 18 Pro Max",
         "",
     ]
@@ -226,6 +244,15 @@ def make_stock_message(items):
     return "\n".join(lines)
 
 
+def make_error_message(store_name, error):
+    return (
+        "⚠️ **Apple在庫監視エラー**\n\n"
+        f"🏬 {store_name}\n"
+        f"~~~{error}~~~\n\n"
+        "※このエラー発生時は、その店舗の在庫状態を変更していません。"
+    )
+
+
 def main():
 
     # ------------------------------------------
@@ -244,9 +271,9 @@ def main():
     print("Apple Store iPhone 在庫監視")
     print("==========================================")
 
-    print(
-        f"店舗：{STORE_NAME} ({STORE_NUMBER})"
-    )
+    print("監視店舗：")
+    for store_number, store_name in STORES.items():
+        print(f"  ・{store_name} ({store_number})")
 
     print("機種：iPhone 18 Pro Max")
     print("容量：256GB / 512GB")
@@ -258,122 +285,145 @@ def main():
     print("==========================================")
 
     old_state = load_state()
+    new_state = dict(old_state)
+    errors = []
 
-    try:
+    for store_number, store_name in STORES.items():
 
-        results = check_stock()
+        try:
+            print("------------------------------------------")
+            print(f"{store_name} ({store_number}) を確認中")
+            print("------------------------------------------")
 
-        newly_available_items = []
+            results = check_stock(
+                store_number,
+                store_name
+            )
 
-        for part_number, item in results.items():
-
-            old_status = old_state.get(
-                part_number,
+            old_store_state = old_state.get(
+                store_number,
                 {}
-            ).get(
-                "status",
-                "unavailable"
             )
 
-            # 前回在庫なし
-            # ↓
-            # 今回在庫あり
-            if (
-                item["status"] == "available"
-                and old_status != "available"
-            ):
-                newly_available_items.append(item)
+            newly_available_items = []
 
-        # 現在の状態を保存
-        new_state = {
-            part_number: {
-                "name": item["name"],
-                "status": item["status"],
+            for part_number, item in results.items():
+
+                old_status = old_store_state.get(
+                    part_number,
+                    {}
+                ).get(
+                    "status",
+                    "unavailable"
+                )
+
+                # 前回在庫なし
+                # ↓
+                # 今回在庫あり
+                if (
+                    item["status"] == "available"
+                    and old_status != "available"
+                ):
+                    newly_available_items.append(item)
+
+            # 現在の状態を店舗別に保存
+            new_state[store_number] = {
+                part_number: {
+                    "name": item["name"],
+                    "status": item["status"],
+                }
+                for part_number, item in results.items()
             }
-            for part_number, item in results.items()
-        }
 
-        save_state(new_state)
+            # --------------------------------------
+            # 新しく在庫が出た
+            # --------------------------------------
 
-        # --------------------------------------
-        # 新しく在庫が出た
-        # --------------------------------------
+            if newly_available_items:
 
-        if newly_available_items:
+                message = make_stock_message(
+                    store_name,
+                    newly_available_items
+                )
 
-            message = make_stock_message(
-                newly_available_items
-            )
+                print(message)
 
-            print(message)
+                send_discord(message)
 
-            send_discord(message)
+                print(
+                    f"{store_name}：Discordへ在庫通知を送信しました。"
+                )
 
-            print(
-                "Discordへ在庫通知を送信しました。"
-            )
+            # --------------------------------------
+            # 在庫はあるが前回から変化なし
+            # --------------------------------------
 
-        # --------------------------------------
-        # 在庫はあるが前回から変化なし
-        # --------------------------------------
+            elif any(
+                item["status"] == "available"
+                for item in results.values()
+            ):
 
-        elif any(
-            item["status"] == "available"
-            for item in results.values()
-        ):
-
-            print(
-                "在庫あり（前回から変化なし）。"
-            )
-
-            print(
-                "Discord通知は送りません。"
-            )
-
-        # --------------------------------------
-        # 在庫なし
-        # --------------------------------------
-
-        else:
-
-            print(
-                "現在、Apple 川崎に"
-                "対象商品の在庫はありません。"
-            )
-
-    except Exception as e:
-
-        print("==========================================")
-        print("エラー")
-        print(e)
-        print("==========================================")
-
-        # エラー時はDiscordへ通知
-        # ただしWebhook自体がない場合は送信しない
-
-        if DISCORD_WEBHOOK:
-
-            try:
-
-                send_discord(
-                    "⚠️ **Apple在庫監視エラー**\n\n"
-                    f"~~~{e}~~~\n\n"
-                    "※このエラー発生時は"
-                    "在庫状態を変更していません。"
+                print(
+                    f"{store_name}：在庫あり（前回から変化なし）。"
                 )
 
                 print(
-                    "Discordへエラー通知を送信しました。"
+                    "Discord通知は送りません。"
                 )
 
-            except Exception as discord_error:
+            # --------------------------------------
+            # 在庫なし
+            # --------------------------------------
+
+            else:
 
                 print(
-                    "Discord通知にも失敗しました：",
-                    discord_error
+                    f"{store_name}：現在、対象商品の在庫はありません。"
                 )
 
-        raise
+        except Exception as e:
+
+            errors.append(
+                (store_name, e)
+            )
+
+            print("------------------------------------------")
+            print(f"{store_name}：エラー")
+            print(e)
+            print("------------------------------------------")
+
+            # エラー時は、その店舗の状態を変更しない
+            # ただし他店舗の監視は継続する。
+
+            if DISCORD_WEBHOOK:
+
+                try:
+
+                    send_discord(
+                        make_error_message(
+                            store_name,
+                            e
+                        )
+                    )
+
+                    print(
+                        f"{store_name}：Discordへエラー通知を送信しました。"
+                    )
+
+                except Exception as discord_error:
+
+                    print(
+                        "Discord通知にも失敗しました：",
+                        discord_error
+                    )
+
+    # 成功した店舗の状態だけ保存
+    save_state(new_state)
+
+    if errors:
+        raise RuntimeError(
+            "一部の店舗で在庫確認に失敗しました。"
+        )
 
 
 if __name__ == "__main__":
