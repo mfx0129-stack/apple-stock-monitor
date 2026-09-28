@@ -23,6 +23,7 @@ PRODUCTS = {
     "MJXA4J/A": "iPhone 18 Pro Max 512GB シルバー",
     "MJXC4J/A": "iPhone 18 Pro Max 512GB バーガンディ",
     "MJXD4J/A": "iPhone 18 Pro Max 512GB グレイシャー",
+    "MJXG4J/A": "iPhone 18 Pro Max 1TB バーガンディ",
 }
 
 STATE_FILE = Path("stock_state.json")
@@ -53,7 +54,8 @@ def test_discord():
         "この通知はテスト用です。\n\n"
         "🏬 Apple 川崎 / Apple 渋谷\n"
         "📱 iPhone 18 Pro Max\n"
-        "💾 256GB / 512GB\n"
+        "💾 256GB / 512GB / 1TB\n"
+        "🎨 1TB バーガンディを監視対象に追加済み\n"
     )
 
     send_discord(message)
@@ -276,11 +278,12 @@ def main():
         print(f"  ・{store_name} ({store_number})")
 
     print("機種：iPhone 18 Pro Max")
-    print("容量：256GB / 512GB")
+    print("容量：256GB / 512GB / 1TB")
     print(
         "カラー：ブラック / シルバー / "
         "グレイシャー / バーガンディ"
     )
+    print("追加監視：1TB バーガンディ")
 
     print("==========================================")
 
