@@ -4,75 +4,21 @@
       "name": "iPhone 18 Pro Max 256GB ブラック",
       "status": "unavailable"
     },
-    "MJX64J/A": {
-      "name": "iPhone 18 Pro Max 256GB シルバー",
-      "status": "unavailable"
-    },
     "MJX74J/A": {
       "name": "iPhone 18 Pro Max 256GB バーガンディ",
       "status": "available"
     },
-    "MJX84J/A": {
-      "name": "iPhone 18 Pro Max 256GB グレイシャー",
-      "status": "unavailable"
-    },
     "MJX94J/A": {
       "name": "iPhone 18 Pro Max 512GB ブラック",
-      "status": "unavailable"
-    },
-    "MJXA4J/A": {
-      "name": "iPhone 18 Pro Max 512GB シルバー",
       "status": "unavailable"
     },
     "MJXC4J/A": {
       "name": "iPhone 18 Pro Max 512GB バーガンディ",
       "status": "available"
     },
-    "MJXD4J/A": {
-      "name": "iPhone 18 Pro Max 512GB グレイシャー",
-      "status": "unavailable"
-    },
     "MJXG4J/A": {
       "name": "iPhone 18 Pro Max 1TB バーガンディ",
       "status": "available"
-    }
-  },
-  "R119": {
-    "MJX54J/A": {
-      "name": "iPhone 18 Pro Max 256GB ブラック",
-      "status": "unavailable"
-    },
-    "MJX64J/A": {
-      "name": "iPhone 18 Pro Max 256GB シルバー",
-      "status": "unavailable"
-    },
-    "MJX74J/A": {
-      "name": "iPhone 18 Pro Max 256GB バーガンディ",
-      "status": "unavailable"
-    },
-    "MJX84J/A": {
-      "name": "iPhone 18 Pro Max 256GB グレイシャー",
-      "status": "unavailable"
-    },
-    "MJX94J/A": {
-      "name": "iPhone 18 Pro Max 512GB ブラック",
-      "status": "unavailable"
-    },
-    "MJXA4J/A": {
-      "name": "iPhone 18 Pro Max 512GB シルバー",
-      "status": "unavailable"
-    },
-    "MJXC4J/A": {
-      "name": "iPhone 18 Pro Max 512GB バーガンディ",
-      "status": "unavailable"
-    },
-    "MJXD4J/A": {
-      "name": "iPhone 18 Pro Max 512GB グレイシャー",
-      "status": "unavailable"
-    },
-    "MJXG4J/A": {
-      "name": "iPhone 18 Pro Max 1TB バーガンディ",
-      "status": "unavailable"
     }
   }
 }
