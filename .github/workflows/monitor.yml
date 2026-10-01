@@ -18,12 +18,16 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: apple-stock-monitor
+  cancel-in-progress: true
+
 jobs:
   monitor:
     runs-on: ubuntu-latest
+    timeout-minutes: 4
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@v5
         with:
@@ -49,17 +53,13 @@ jobs:
         if: ${{ github.event_name == 'schedule' }}
         run: |
           if [ -f stock_state.json ]; then
-
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
             git add stock_state.json
-
             if git diff --cached --quiet; then
               echo "No stock state changes."
             else
               git commit -m "Update stock state"
               git push
             fi
-
           fi
