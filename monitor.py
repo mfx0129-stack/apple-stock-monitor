@@ -14,9 +14,7 @@ STORES = {
 }
 
 PRODUCTS = {
-    "MJX54J/A": "iPhone 18 Pro Max 256GB ブラック",
     "MJX74J/A": "iPhone 18 Pro Max 256GB バーガンディ",
-    "MJX94J/A": "iPhone 18 Pro Max 512GB ブラック",
     "MJXC4J/A": "iPhone 18 Pro Max 512GB バーガンディ",
     "MJXG4J/A": "iPhone 18 Pro Max 1TB バーガンディ",
 }
@@ -49,7 +47,7 @@ def test_discord():
         "🏬 Apple 川崎\n"
         "📱 iPhone 18 Pro Max\n"
         "💾 256GB / 512GB / 1TB\n"
-        "🎨 ブラック / バーガンディ\n"
+        "🎨 バーガンディ\n"
     )
 
     send_discord(message)
@@ -65,11 +63,9 @@ def load_state():
             STATE_FILE.read_text(encoding="utf-8")
         )
 
-        # 以前の複数店舗形式から川崎だけを引き継ぐ
         if "R710" in state and isinstance(state["R710"], dict):
             return {"R710": state["R710"]}
 
-        # さらに以前の単一店舗形式にも対応
         if any(part_number in state for part_number in PRODUCTS):
             return {"R710": state}
 
@@ -230,7 +226,7 @@ def main():
     print("  ・Apple 川崎 (R710)")
     print("機種：iPhone 18 Pro Max")
     print("容量：256GB / 512GB / 1TB")
-    print("カラー：ブラック / バーガンディ")
+    print("カラー：バーガンディ")
     print("==========================================")
 
     old_state = load_state()
