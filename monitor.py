@@ -11,6 +11,9 @@ APPLE_URL = "https://www.apple.com/jp/shop/retail/pickup-message"
 
 STORES = {
     "R710": "Apple 川崎",
+    "R119": "Apple 渋谷",
+    "R224": "Apple 表参道",
+    "R079": "Apple 銀座",
 }
 
 PRODUCTS = {
@@ -69,8 +72,8 @@ def load_state():
             STATE_FILE.read_text(encoding="utf-8")
         )
 
-        if "R710" in state and isinstance(state["R710"], dict):
-            return {"R710": state["R710"]}
+        if any(k in state for k in STORES):
+            return {k: v for k, v in state.items() if k in STORES and isinstance(v, dict)}
 
         if any(part_number in state for part_number in PRODUCTS):
             return {"R710": state}
@@ -98,7 +101,8 @@ def check_stock(store_number, store_name):
         "store": store_number,
     }
 
-    for index, part_number in enumerate(PRODUCTS):
+    selected = {k: v for k, v in PRODUCTS.items() if store_number == "R710" or "Duo" in v}
+    for index, part_number in enumerate(selected):
         params[f"parts.{index}"] = part_number
 
     headers = {
@@ -159,7 +163,7 @@ def check_stock(store_number, store_name):
     parts_availability = target_store.get("partsAvailability", {})
     results = {}
 
-    for part_number, product_name in PRODUCTS.items():
+    for part_number, product_name in selected.items():
         part_data = parts_availability.get(part_number, {})
         pickup_display = part_data.get("pickupDisplay")
 
@@ -229,7 +233,8 @@ def main():
     print("Apple Store iPhone 在庫監視")
     print("==========================================")
     print("監視店舗：")
-    print("  ・Apple 川崎 (R710)")
+    for store_id, store_name in STORES.items():
+        print(f"  ・{store_name} ({store_id})")
     print("機種：iPhone 18 Pro Max / iPhone Duo")
     print("容量：256GB / 512GB / 1TB")
     print("カラー：Pro Max バーガンディ / Duo 全2色")
