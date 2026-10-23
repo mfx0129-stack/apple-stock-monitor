@@ -14,6 +14,8 @@ STORES = {
     "R119": "Apple 渋谷",
     "R224": "Apple 表参道",
     "R079": "Apple 銀座",
+    "R718": "Apple 丸の内",
+    "R128": "Apple 新宿",
 }
 
 PRODUCTS = {
