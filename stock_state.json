@@ -6,7 +6,7 @@
     },
     "MJXC4J/A": {
       "name": "iPhone 18 Pro Max 512GB バーガンディ",
-      "status": "available"
+      "status": "unavailable"
     },
     "MJXG4J/A": {
       "name": "iPhone 18 Pro Max 1TB バーガンディ",
@@ -90,6 +90,58 @@
     }
   },
   "R079": {
+    "MK244J/A": {
+      "name": "iPhone Duo 256GB スターホワイト",
+      "status": "unavailable"
+    },
+    "MK254J/A": {
+      "name": "iPhone Duo 256GB ナイトスカイ",
+      "status": "unavailable"
+    },
+    "MK264J/A": {
+      "name": "iPhone Duo 512GB スターホワイト",
+      "status": "unavailable"
+    },
+    "MK274J/A": {
+      "name": "iPhone Duo 512GB ナイトスカイ",
+      "status": "unavailable"
+    },
+    "MK284J/A": {
+      "name": "iPhone Duo 1TB スターホワイト",
+      "status": "unavailable"
+    },
+    "MK294J/A": {
+      "name": "iPhone Duo 1TB ナイトスカイ",
+      "status": "unavailable"
+    }
+  },
+  "R718": {
+    "MK244J/A": {
+      "name": "iPhone Duo 256GB スターホワイト",
+      "status": "unavailable"
+    },
+    "MK254J/A": {
+      "name": "iPhone Duo 256GB ナイトスカイ",
+      "status": "unavailable"
+    },
+    "MK264J/A": {
+      "name": "iPhone Duo 512GB スターホワイト",
+      "status": "unavailable"
+    },
+    "MK274J/A": {
+      "name": "iPhone Duo 512GB ナイトスカイ",
+      "status": "unavailable"
+    },
+    "MK284J/A": {
+      "name": "iPhone Duo 1TB スターホワイト",
+      "status": "unavailable"
+    },
+    "MK294J/A": {
+      "name": "iPhone Duo 1TB ナイトスカイ",
+      "status": "unavailable"
+    }
+  },
+  "R128": {
     "MK244J/A": {
       "name": "iPhone Duo 256GB スターホワイト",
       "status": "unavailable"
