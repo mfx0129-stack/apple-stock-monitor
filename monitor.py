@@ -17,6 +17,12 @@ PRODUCTS = {
     "MJX74J/A": "iPhone 18 Pro Max 256GB バーガンディ",
     "MJXC4J/A": "iPhone 18 Pro Max 512GB バーガンディ",
     "MJXG4J/A": "iPhone 18 Pro Max 1TB バーガンディ",
+    "MK244J/A": "iPhone Duo 256GB スターホワイト",
+    "MK254J/A": "iPhone Duo 256GB ナイトスカイ",
+    "MK264J/A": "iPhone Duo 512GB スターホワイト",
+    "MK274J/A": "iPhone Duo 512GB ナイトスカイ",
+    "MK284J/A": "iPhone Duo 1TB スターホワイト",
+    "MK294J/A": "iPhone Duo 1TB ナイトスカイ",
 }
 
 STATE_FILE = Path("stock_state.json")
@@ -45,9 +51,9 @@ def test_discord():
         "Discord Webhookの接続テストに成功しました。\n"
         "この通知はテスト用です。\n\n"
         "🏬 Apple 川崎\n"
-        "📱 iPhone 18 Pro Max\n"
+        "📱 iPhone 18 Pro Max / iPhone Duo\n"
         "💾 256GB / 512GB / 1TB\n"
-        "🎨 バーガンディ\n"
+        "🎨 Pro Max：バーガンディ / Duo：全2色\n"
     )
 
     send_discord(message)
@@ -187,7 +193,6 @@ def make_stock_message(store_name, items):
         "🚨 **Apple Store 在庫あり！**",
         "",
         f"🏬 {store_name}",
-        "📱 iPhone 18 Pro Max",
         "",
     ]
 
@@ -198,7 +203,8 @@ def make_stock_message(store_name, items):
         [
             "",
             "🛒 Apple公式",
-            "https://www.apple.com/jp/shop/buy-iphone/iphone-18-pro",
+            "iPhone 18 Pro Max: https://www.apple.com/jp/shop/buy-iphone/iphone-18-pro",
+            "iPhone Duo: https://www.apple.com/jp/shop/buy-iphone/iphone-duo",
         ]
     )
 
@@ -224,9 +230,9 @@ def main():
     print("==========================================")
     print("監視店舗：")
     print("  ・Apple 川崎 (R710)")
-    print("機種：iPhone 18 Pro Max")
+    print("機種：iPhone 18 Pro Max / iPhone Duo")
     print("容量：256GB / 512GB / 1TB")
-    print("カラー：バーガンディ")
+    print("カラー：Pro Max バーガンディ / Duo 全2色")
     print("==========================================")
 
     old_state = load_state()
