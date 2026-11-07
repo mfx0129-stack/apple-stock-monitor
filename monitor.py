@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 
 from curl_cffi import requests
@@ -96,14 +97,14 @@ def save_state(state):
     )
 
 
-def check_stock(store_number, store_name):
+def check_stock(store_number, store_name, include_pro_max=False):
     params = {
         "pl": "true",
         "mts.0": "regular",
         "store": store_number,
     }
 
-    selected = {k: v for k, v in PRODUCTS.items() if store_number == "R710" or "Duo" in v}
+    selected = {k: v for k, v in PRODUCTS.items() if "Duo" in v or (store_number == "R710" and include_pro_max)}
     for index, part_number in enumerate(selected):
         params[f"parts.{index}"] = part_number
 
@@ -242,6 +243,9 @@ def main():
     print("カラー：Pro Max バーガンディ / Duo 全2色")
     print("==========================================")
 
+    include_pro_max = datetime.now(timezone.utc).minute % 3 == 0
+    print(f"Pro Max 監視：{include_pro_max}")
+
     old_state = load_state()
     new_state = dict(old_state)
     errors = []
@@ -252,7 +256,7 @@ def main():
             print(f"{store_name} ({store_number}) を確認中")
             print("------------------------------------------")
 
-            results = check_stock(store_number, store_name)
+            results = check_stock(store_number, store_name, include_pro_max)
 
             old_store_state = old_state.get(store_number, {})
             newly_available_items = []
@@ -272,6 +276,7 @@ def main():
                     newly_available_items.append(item)
 
             new_state[store_number] = {
+                **old_store_state,
                 part_number: {
                     "name": item["name"],
                     "status": item["status"],
