@@ -275,14 +275,13 @@ def main():
                 ):
                     newly_available_items.append(item)
 
-            new_state[store_number] = {
-                **old_store_state,
-                part_number: {
+            updated_store_state = dict(old_store_state)
+            for part_number, item in results.items():
+                updated_store_state[part_number] = {
                     "name": item["name"],
                     "status": item["status"],
                 }
-                for part_number, item in results.items()
-            }
+            new_state[store_number] = updated_store_state
 
             if newly_available_items:
                 message = make_stock_message(
