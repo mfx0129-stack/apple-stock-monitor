@@ -243,8 +243,8 @@ def main():
     print("カラー：Pro Max バーガンディ / Duo 全2色")
     print("==========================================")
 
-    include_pro_max = datetime.now(timezone.utc).minute % 3 == 0
-    print(f"Pro Max 監視：{include_pro_max}")
+    include_pro_max = True
+    print("Pro Max 監視：有効（5分ごと）")
 
     old_state = load_state()
     new_state = dict(old_state)
