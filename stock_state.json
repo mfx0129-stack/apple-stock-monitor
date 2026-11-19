@@ -40,7 +40,7 @@
   "R119": {
     "MK244J/A": {
       "name": "iPhone Duo 256GB スターホワイト",
-      "status": "available"
+      "status": "unavailable"
     },
     "MK254J/A": {
       "name": "iPhone Duo 256GB ナイトスカイ",
@@ -92,7 +92,7 @@
   "R079": {
     "MK244J/A": {
       "name": "iPhone Duo 256GB スターホワイト",
-      "status": "available"
+      "status": "unavailable"
     },
     "MK254J/A": {
       "name": "iPhone Duo 256GB ナイトスカイ",
@@ -144,7 +144,7 @@
   "R128": {
     "MK244J/A": {
       "name": "iPhone Duo 256GB スターホワイト",
-      "status": "available"
+      "status": "unavailable"
     },
     "MK254J/A": {
       "name": "iPhone Duo 256GB ナイトスカイ",
