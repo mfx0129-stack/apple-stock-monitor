@@ -14,11 +14,11 @@
     },
     "MK244J/A": {
       "name": "iPhone Duo 256GB スターホワイト",
-      "status": "unavailable"
+      "status": "available"
     },
     "MK254J/A": {
       "name": "iPhone Duo 256GB ナイトスカイ",
-      "status": "unavailable"
+      "status": "available"
     },
     "MK264J/A": {
       "name": "iPhone Duo 512GB スターホワイト",
@@ -40,11 +40,11 @@
   "R119": {
     "MK244J/A": {
       "name": "iPhone Duo 256GB スターホワイト",
-      "status": "unavailable"
+      "status": "available"
     },
     "MK254J/A": {
       "name": "iPhone Duo 256GB ナイトスカイ",
-      "status": "unavailable"
+      "status": "available"
     },
     "MK264J/A": {
       "name": "iPhone Duo 512GB スターホワイト",
@@ -66,11 +66,11 @@
   "R224": {
     "MK244J/A": {
       "name": "iPhone Duo 256GB スターホワイト",
-      "status": "unavailable"
+      "status": "available"
     },
     "MK254J/A": {
       "name": "iPhone Duo 256GB ナイトスカイ",
-      "status": "unavailable"
+      "status": "available"
     },
     "MK264J/A": {
       "name": "iPhone Duo 512GB スターホワイト",
@@ -92,11 +92,11 @@
   "R079": {
     "MK244J/A": {
       "name": "iPhone Duo 256GB スターホワイト",
-      "status": "unavailable"
+      "status": "available"
     },
     "MK254J/A": {
       "name": "iPhone Duo 256GB ナイトスカイ",
-      "status": "unavailable"
+      "status": "available"
     },
     "MK264J/A": {
       "name": "iPhone Duo 512GB スターホワイト",
@@ -118,11 +118,11 @@
   "R718": {
     "MK244J/A": {
       "name": "iPhone Duo 256GB スターホワイト",
-      "status": "unavailable"
+      "status": "available"
     },
     "MK254J/A": {
       "name": "iPhone Duo 256GB ナイトスカイ",
-      "status": "unavailable"
+      "status": "available"
     },
     "MK264J/A": {
       "name": "iPhone Duo 512GB スターホワイト",
@@ -144,7 +144,7 @@
   "R128": {
     "MK244J/A": {
       "name": "iPhone Duo 256GB スターホワイト",
-      "status": "unavailable"
+      "status": "available"
     },
     "MK254J/A": {
       "name": "iPhone Duo 256GB ナイトスカイ",
